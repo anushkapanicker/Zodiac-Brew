@@ -3,34 +3,94 @@ import { motion } from 'framer-motion';
 import { User, Package, Coffee, Settings, LogOut, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-interface Order {
-  id: number;
-  items: Array<{
-    id: number;
+interface OrderItem {
+  coffee_id: string;
+  qty: number;
+  unitPrice: number;
+  _id: string;
+  coffeeDetails?: {
     name: string;
-    price: string;
     image: string;
-    quantity: number;
-  }>;
-  total: number;
+    description: string;
+  };
+}
+
+interface Order {
+  _id: string;
+  items: OrderItem[];
+  totalPrice: number;
   date: string;
+}
+
+interface UserData {
+  _id: string;
+  fullName: string;
+  email: string;
+  dateOfBirth: string;
+  previousOrders: Order[];
 }
 
 const Profile = () => {
   const [activeTab, setActiveTab] = useState('orders');
-  const [previousOrders, setPreviousOrders] = useState<Order[]>([]);
+  const [userData, setUserData] = useState<UserData | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const orders = JSON.parse(localStorage.getItem('previousOrders') || '[]');
-    setPreviousOrders(orders);
+    const fetchUserData = async () => {
+      try {
+        const userId = localStorage.getItem('userId'); // Replace with actual user ID fetching logic
+        if (!userId) {
+          alert('User not logged in.');
+          return;
+        }
+
+        const response = await fetch(`http://localhost:3000/api/users/${userId}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch user data');
+        }
+
+        const result = await response.json();
+        const user = result.data;
+
+        // Fetch coffee details for each order item
+        const ordersWithDetails = await Promise.all(
+          user.previousOrders.map(async (order: Order) => {
+            const itemsWithDetails = await Promise.all(
+              order.items.map(async (item: OrderItem) => {
+                const coffeeResponse = await fetch(`http://localhost:3000/api/coffees/${item.coffee_id}`);
+                const coffeeData = coffeeResponse.ok ? await coffeeResponse.json() : null;
+                const coffeeDetails = coffeeData?.data;
+                return {
+                  ...item,
+                  coffeeDetails: coffeeDetails
+                    ? {
+                        name: coffeeDetails.name,
+                        image: coffeeDetails.image,
+                        description: coffeeDetails.description,
+                      }
+                    : null,
+                };
+              })
+            );
+            return { ...order, items: itemsWithDetails };
+          })
+        );
+
+        setUserData({ ...user, previousOrders: ordersWithDetails });
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        alert('Failed to load user data.');
+      }
+    };
+
+    fetchUserData();
   }, []);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
     });
   };
 
@@ -38,24 +98,32 @@ const Profile = () => {
     // Convert order items to cart format
     const cartItems = order.items.map(item => ({
       coffee: {
-        id: item.id,
-        name: item.name,
-        price: item.price,
-        image: item.image,
-        description: '' // Since we don't store description in orders
+        id: item.coffee_id,
+        name: item.coffeeDetails?.name || '',
+        price: item.unitPrice.toString(),
+        image: item.coffeeDetails?.image || '',
+        description: item.coffeeDetails?.description || '',
       },
-      quantity: item.quantity
+      quantity: item.qty,
     }));
 
     // Save to cart
     localStorage.setItem('cart', JSON.stringify(cartItems));
-    
+
     // Trigger cart update
     window.dispatchEvent(new CustomEvent('cartUpdated'));
-    
+
     // Navigate to cart
     navigate('/cart');
   };
+
+  if (!userData) {
+    return (
+      <div className="min-h-screen pt-16 bg-amber-50 flex items-center justify-center">
+        <p>Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen pt-16 bg-amber-50">
@@ -69,8 +137,8 @@ const Profile = () => {
                   <User size={48} className="text-white" />
                 </div>
                 <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold text-white">John Doe</h1>
-                  <p className="text-amber-200">john.doe@example.com</p>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-white">{userData.fullName}</h1>
+                  <p className="text-amber-200">{userData.email}</p>
                 </div>
               </div>
             </div>
@@ -89,28 +157,6 @@ const Profile = () => {
                   <Package size={20} />
                   <span>Previous Orders</span>
                 </button>
-                <button
-                  onClick={() => setActiveTab('preferences')}
-                  className={`px-6 py-4 text-sm font-medium flex items-center space-x-2 ${
-                    activeTab === 'preferences'
-                      ? 'border-b-2 border-amber-700 text-amber-700'
-                      : 'text-gray-500 hover:text-amber-700'
-                  }`}
-                >
-                  <Coffee size={20} />
-                  <span>Coffee Preferences</span>
-                </button>
-                <button
-                  onClick={() => setActiveTab('settings')}
-                  className={`px-6 py-4 text-sm font-medium flex items-center space-x-2 ${
-                    activeTab === 'settings'
-                      ? 'border-b-2 border-amber-700 text-amber-700'
-                      : 'text-gray-500 hover:text-amber-700'
-                  }`}
-                >
-                  <Settings size={20} />
-                  <span>Account Settings</span>
-                </button>
               </nav>
             </div>
 
@@ -123,30 +169,32 @@ const Profile = () => {
                   transition={{ duration: 0.5 }}
                 >
                   <h2 className="text-xl font-bold text-amber-900 mb-6">Previous Orders</h2>
-                  {previousOrders.length > 0 ? (
+                  {userData.previousOrders.length > 0 ? (
                     <div className="space-y-6">
-                      {previousOrders.map((order) => (
-                        <div key={order.id} className="bg-amber-50 rounded-lg p-6">
+                      {userData.previousOrders.map(order => (
+                        <div key={order._id} className="bg-amber-50 rounded-lg p-6">
                           <div className="flex justify-between items-center mb-4">
                             <span className="text-sm text-gray-600">
                               Order Date: {formatDate(order.date)}
                             </span>
                             <span className="text-amber-700 font-bold">
-                              Total: ₹{order.total.toFixed(2)}
+                              Total: ₹{order.totalPrice.toFixed(2)}
                             </span>
                           </div>
                           <div className="space-y-4">
-                            {order.items.map((item) => (
-                              <div key={item.id} className="flex items-center space-x-4">
+                            {order.items.map(item => (
+                              <div key={item._id} className="flex items-center space-x-4">
                                 <img
-                                  src={item.image}
-                                  alt={item.name}
-                                  className="w-16 h-16 object-cover rounded-lg"
+                                  src={item.coffeeDetails?.image || '/placeholder.jpg'}
+                                  alt={item.coffeeDetails?.name || 'Coffee'}
+                                  className="w-16 h-16 rounded-lg object-cover"
                                 />
                                 <div>
-                                  <h3 className="font-medium text-amber-900">{item.name}</h3>
+                                  <h3 className="font-medium text-amber-900">
+                                    {item.coffeeDetails?.name || 'Coffee Name'}
+                                  </h3>
                                   <p className="text-sm text-gray-600">
-                                    Quantity: {item.quantity} × {item.price}
+                                    Quantity: {item.qty} × ₹{item.unitPrice}
                                   </p>
                                 </div>
                               </div>
@@ -170,43 +218,6 @@ const Profile = () => {
                       <p className="text-gray-600">No previous orders found.</p>
                     </div>
                   )}
-                </motion.div>
-              )}
-
-              {activeTab === 'preferences' && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5 }}
-                  className="text-center py-12"
-                >
-                  <Coffee size={48} className="mx-auto text-gray-300 mb-4" />
-                  <p className="text-gray-600">Coffee preferences coming soon!</p>
-                </motion.div>
-              )}
-
-              {activeTab === 'settings' && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5 }}
-                  className="space-y-6"
-                >
-                  <h2 className="text-xl font-bold text-amber-900 mb-6">Account Settings</h2>
-                  <div className="space-y-4">
-                    <button className="w-full px-4 py-3 text-left bg-amber-50 rounded-lg hover:bg-amber-100 transition-colors flex items-center space-x-3">
-                      <User size={20} className="text-amber-700" />
-                      <span>Edit Profile</span>
-                    </button>
-                    <button className="w-full px-4 py-3 text-left bg-amber-50 rounded-lg hover:bg-amber-100 transition-colors flex items-center space-x-3">
-                      <Settings size={20} className="text-amber-700" />
-                      <span>Preferences</span>
-                    </button>
-                    <button className="w-full px-4 py-3 text-left bg-red-50 rounded-lg hover:bg-red-100 transition-colors flex items-center space-x-3 text-red-600">
-                      <LogOut size={20} />
-                      <span>Sign Out</span>
-                    </button>
-                  </div>
                 </motion.div>
               )}
             </div>

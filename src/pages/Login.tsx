@@ -26,8 +26,9 @@ const Login = () => {
     setError('');
 
     try {
+      console.log(formData);
       await login(formData);
-      navigate('/profile');
+      navigate('/');
     } catch (error) {
       setError(error.message || 'Failed to login. Please try again.');
     } finally {
@@ -100,25 +101,6 @@ const Login = () => {
                       placeholder="••••••••"
                       required
                     />
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center">
-                    <input
-                      id="remember-me"
-                      name="remember-me"
-                      type="checkbox"
-                      className="h-4 w-4 text-amber-600 focus:ring-amber-500 border-gray-300 rounded"
-                    />
-                    <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
-                      Remember me
-                    </label>
-                  </div>
-                  <div className="text-sm">
-                    <a href="#" className="font-medium text-amber-700 hover:text-amber-800">
-                      Forgot your password?
-                    </a>
                   </div>
                 </div>
 

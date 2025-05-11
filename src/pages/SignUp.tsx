@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Coffee, UserPlus, User, Lock, Mail, Calendar } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import FacialRecognition from '../components/FacialRecognition';
 import { motion } from 'framer-motion';
 
 const SignUp = () => {
@@ -13,8 +12,7 @@ const SignUp = () => {
     email: '',
     password: '',
     confirmPassword: '',
-    dateOfBirth: '',
-    mood: ''
+    dateOfBirth: ''
   });
   const [error, setError] = useState('');
   const [step, setStep] = useState(1);
@@ -39,10 +37,6 @@ const SignUp = () => {
       
       setAge(calculatedAge);
     }
-  };
-
-  const handleMoodDetected = (mood: string) => {
-    setFormData(prev => ({ ...prev, mood }));
   };
 
   const validateStep = () => {
@@ -93,8 +87,9 @@ const SignUp = () => {
 
     setIsLoading(true);
     try {
+      console.log(formData);
       await register(formData);
-      navigate('/profile');
+      navigate('/');
     } catch (error) {
       setError(error.message || 'Registration failed. Please try again.');
     } finally {
@@ -128,13 +123,13 @@ const SignUp = () => {
                   <div className={`flex-1 border-t-2 ${step >= 2 ? 'border-amber-500' : 'border-gray-200'}`}></div>
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white ${step >= 2 ? 'bg-amber-500' : 'bg-gray-300'}`}>2</div>
                   <div className={`flex-1 border-t-2 ${step >= 3 ? 'border-amber-500' : 'border-gray-200'}`}></div>
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white ${step >= 3 ? 'bg-amber-500' : 'bg-gray-300'}`}>3</div>
-                  <div className={`flex-1 border-t-2 ${step >= 3 ? 'border-amber-500' : 'border-gray-200'}`}></div>
+                  {/* <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white ${step >= 3 ? 'bg-amber-500' : 'bg-gray-300'}`}>3</div>
+                  <div className={`flex-1 border-t-2 ${step >= 3 ? 'border-amber-500' : 'border-gray-200'}`}></div> */}
                 </div>
                 <div className="flex justify-between mt-2 text-sm">
                   <div className={`text-center ${step >= 1 ? 'text-amber-700 font-medium' : 'text-gray-500'}`}>Personal Info</div>
                   <div className={`text-center ${step >= 2 ? 'text-amber-700 font-medium' : 'text-gray-500'}`}>Birth Details</div>
-                  <div className={`text-center ${step >= 3 ? 'text-amber-700 font-medium' : 'text-gray-500'}`}>Mood Analysis</div>
+                  {/* <div className={`text-center ${step >= 3 ? 'text-amber-700 font-medium' : 'text-gray-500'}`}>Mood Analysis</div> */}
                 </div>
               </div>
 
@@ -271,46 +266,7 @@ const SignUp = () => {
                       </div>
                     )}
 
-                    <div className="flex space-x-4">
-                      <button
-                        type="button"
-                        onClick={prevStep}
-                        className="w-1/2 px-4 py-3 border border-amber-700 text-amber-700 rounded-md hover:bg-amber-50 transition-colors"
-                      >
-                        Previous
-                      </button>
-                      <button
-                        type="button"
-                        onClick={nextStep}
-                        className="w-1/2 px-4 py-3 bg-amber-700 text-white rounded-md hover:bg-amber-800 transition-colors"
-                      >
-                        Next Step
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {step === 3 && (
-                  <div>
-                    <div className="mb-6">
-                      <h3 className="text-lg font-medium text-gray-700 mb-4">Facial Mood Recognition</h3>
-                      <p className="text-gray-600 mb-4">
-                        We'll analyze your current mood to provide better coffee recommendations.
-                        Please allow camera access and take a photo.
-                      </p>
-                      
-                      <FacialRecognition onMoodDetected={handleMoodDetected} />
-                      
-                      {formData.mood && (
-                        <div className="mt-4 p-4 bg-amber-50 rounded-md">
-                          <p className="text-amber-800">
-                            <span className="font-medium">Detected Mood:</span> {formData.mood}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex space-x-4">
+                   <div className="flex space-x-4">
                       <button
                         type="button"
                         onClick={prevStep}

@@ -2,37 +2,41 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Coffee, Star } from 'lucide-react';
 import CoffeeCard from '../components/CoffeeCard';
-import ContactForm from '../components/ContactForm';
-import coffeeData from '../data/coffeeData';
 
 const Home = () => {
   const [favorites, setFavorites] = useState<number[]>([]);
-  const [recentPurchases, setRecentPurchases] = useState<typeof coffeeData>([]);
+  interface Coffee {
+    _id: number;
+    name: string;
+    description: string;
+    image: string;
+    price: number;
+    zodiacSigns: string[];
+    moods: string[];
+  }
 
-  useEffect(() => {
-    // Simulate loading recent purchases from a database
-    // In a real app, this would come from an API call
-    const randomCoffees = [...coffeeData]
-      .sort(() => 0.5 - Math.random())
-      .slice(0, 4);
-    
-    setRecentPurchases(randomCoffees);
-    
-    // Simulate loading favorites from localStorage
-    const savedFavorites = localStorage.getItem('favorites');
-    if (savedFavorites) {
-      setFavorites(JSON.parse(savedFavorites));
+  const [coffeeData, setCoffeeData] = useState<Coffee[]>([]);
+
+useEffect(() => {
+  // Fetch coffee data from the API
+  const fetchCoffeeData = async () => {
+    try {
+      const response = await fetch('http://localhost:3000/api/coffees');
+      if (!response.ok) {
+        throw new Error('Failed to fetch coffee data');
+      }
+      const res = await response.json();
+      const { data } = res;
+      setCoffeeData(Array.isArray(data) ? data : []); // Ensure data is an array
+    } catch (error) {
+      console.error('Error fetching coffee data:', error);
+      setCoffeeData([]); // Fallback to an empty array on error
     }
-  }, []);
-
-  const toggleFavorite = (id: number) => {
-    const newFavorites = favorites.includes(id)
-      ? favorites.filter(favId => favId !== id)
-      : [...favorites, id];
-    
-    setFavorites(newFavorites);
-    localStorage.setItem('favorites', JSON.stringify(newFavorites));
   };
+
+    fetchCoffeeData();
+
+  }, []);
 
   return (
     <div className="pt-16">
@@ -84,29 +88,29 @@ const Home = () => {
       <section id="recent-purchases" className="py-20 bg-amber-50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-amber-900 mb-4">Your Recent Favorites</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-amber-900 mb-4">Some of the classics</h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Based on your previous orders and preferences, we think you'll love these coffee selections.
+              We think you'll love these coffee selections.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {recentPurchases.map(coffee => (
+            {coffeeData.map(coffee => (
               <motion.div
-                key={coffee.id}
+                key={coffee._id}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
                 viewport={{ once: true }}
               >
                 <CoffeeCard
-                  id={coffee.id}
+                  id={coffee._id}
                   name={coffee.name}
                   description={coffee.description}
                   image={coffee.image}
                   price={coffee.price}
                   zodiacSign={coffee.zodiacSigns[0]}
-                  isFavorite={favorites.includes(coffee.id)}
+                  isFavorite={favorites.includes(coffee._id)}
                   onToggleFavorite={toggleFavorite}
                 />
               </motion.div>
@@ -171,7 +175,7 @@ const Home = () => {
                   <circle cx="12" cy="12" r="3"></circle>
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-amber-900 mb-3">Mood Detection Technology</h3>
+              <h3 className="text-xl font-bold text-amber-900 mb-3">Mood Detection Technology <br/>( Coming Soon! )</h3>
               <p className="text-gray-600">
                 Our advanced facial recognition system analyzes your current mood to recommend the perfect coffee for your emotional state.
               </p>
@@ -180,8 +184,6 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Contact Form */}
-      <ContactForm />
     </div>
   );
 };

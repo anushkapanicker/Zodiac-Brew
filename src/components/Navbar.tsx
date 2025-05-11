@@ -80,10 +80,10 @@ const Navbar = () => {
               Home
             </Link>
             <Link to="/services" className={`font-medium transition-colors ${isActive('/services') ? 'text-amber-700' : 'text-gray-700 hover:text-amber-600'}`}>
-              Services
+              Recommendations
             </Link>
-            <Link to="/favorites" className={`font-medium transition-colors ${isActive('/favorites') ? 'text-amber-700' : 'text-gray-700 hover:text-amber-600'}`}>
-              My Favorites
+            <Link to="/feedback" className={`font-medium transition-colors ${isActive('/feedback') ? 'text-amber-700' : 'text-gray-700 hover:text-amber-600'}`}>
+              Feedback
             </Link>
             <Link to="/about" className={`font-medium transition-colors ${isActive('/about') ? 'text-amber-700' : 'text-gray-700 hover:text-amber-600'}`}>
               About Us
@@ -175,7 +175,7 @@ const Navbar = () => {
                 Home
               </Link>
               <Link to="/services" className={`font-medium transition-colors ${isActive('/services') ? 'text-amber-700' : 'text-gray-700 hover:text-amber-600'}`} onClick={toggleMenu}>
-                Services
+                Recommendations
               </Link>
               <Link to="/favorites" className={`font-medium transition-colors ${isActive('/favorites') ? 'text-amber-700' : 'text-gray-700 hover:text-amber-600'}`} onClick={toggleMenu}>
                 My Favorites

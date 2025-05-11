@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Users, Linkedin, Twitter, Mail } from 'lucide-react';
+import { Users } from 'lucide-react';
 import founderData from '../data/founderData';
 
 const Founders = () => {
@@ -32,35 +32,17 @@ const Founders = () => {
               transition={{ duration: 0.5, delay: index * 0.1 }}
               className="bg-white rounded-lg shadow-lg overflow-hidden"
             >
-              <div className="relative">
-                <div className="h-64 overflow-hidden">
-                  <img 
-                    src={founder.image} 
-                    alt={founder.name} 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end">
-                  <div className="p-6 text-white">
-                    <h3 className="text-xl font-bold">{founder.name}</h3>
-                    <p className="text-amber-300">{founder.role}</p>
-                  </div>
-                </div>
+              <div className="h-64 overflow-hidden">
+                <img 
+                  src={founder.image} 
+                  alt={founder.name} 
+                  className="w-full h-full object-cover"
+                />
               </div>
               
-              <div className="p-6">
-                <p className="text-gray-600 mb-6">{founder.bio}</p>
-                <div className="flex space-x-4">
-                  <a href="#" className="text-gray-500 hover:text-amber-700 transition-colors">
-                    <Linkedin size={20} />
-                  </a>
-                  <a href="#" className="text-gray-500 hover:text-amber-700 transition-colors">
-                    <Twitter size={20} />
-                  </a>
-                  <a href="#" className="text-gray-500 hover:text-amber-700 transition-colors">
-                    <Mail size={20} />
-                  </a>
-                </div>
+              <div className="p-6 text-center">
+                <h3 className="text-xl font-bold text-amber-900">{founder.name}</h3>
+                <p className="text-gray-600">{founder.role}</p>
               </div>
             </motion.div>
           ))}

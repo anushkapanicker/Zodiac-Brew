@@ -36,6 +36,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const handleLogin = async (credentials: LoginCredentials) => {
     try {
       const response = await login(credentials);
+      console.log('Login response:', response);
       setUser(response.user);
     } catch (error) {
       throw error;
@@ -45,6 +46,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const handleRegister = async (data: RegisterData) => {
     try {
       const response = await register(data);
+      console.log('Register response:', response);
       setUser(response.user);
     } catch (error) {
       throw error;

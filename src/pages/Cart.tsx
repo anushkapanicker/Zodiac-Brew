@@ -39,7 +39,7 @@ const Cart = () => {
 
   const calculateTotal = (items: CartItem[]) => {
     const newTotal = items.reduce((sum, item) => {
-      const price = parseFloat(item.coffee.price.replace('₹', ''));
+      const price = parseFloat(item.coffee.price);
       return sum + (price * item.quantity);
     }, 0);
     setTotal(newTotal);
@@ -68,36 +68,61 @@ const Cart = () => {
     window.dispatchEvent(new CustomEvent('cartUpdated'));
   };
 
-  const handleCheckout = () => {
-    if (cartItems.length === 0) {
-      alert('Your cart is empty!');
+const handleCheckout = async () => {
+  if (cartItems.length === 0) {
+    alert('Your cart is empty!');
+    return;
+  }
+
+  try {
+    // Fetch the user's ID (assuming it's stored in localStorage or fetched from an API)
+    const userId = localStorage.getItem('userId'); // Replace with actual user ID fetching logic
+    if (!userId) {
+      alert('User not logged in. Please log in to place an order.');
       return;
     }
 
-    // Save the order to previous orders
-    const newOrder = {
-      id: Date.now(),
-      items: cartItems.map(item => ({
-        id: item.coffee.id,
-        name: item.coffee.name,
-        price: item.coffee.price,
-        image: item.coffee.image,
-        quantity: item.quantity
-      })),
-      total: total + 50, // Including delivery charge
-      date: new Date().toISOString()
+    // Prepare the order data
+    const items = cartItems.map(item => ({
+      coffee_id: item.coffee.id,
+      qty: item.quantity,
+      unitPrice: parseFloat(item.coffee.price),
+    }));
+
+    const totalPrice = items.reduce((sum, item) => sum + item.unitPrice * item.qty, 0);
+
+    const orderData = {
+      items,
+      user_id: userId,
+      totalPrice,
     };
 
-    const previousOrders = JSON.parse(localStorage.getItem('previousOrders') || '[]');
-    localStorage.setItem('previousOrders', JSON.stringify([newOrder, ...previousOrders]));
+    // Send the order data to the API
+    const response = await fetch('http://localhost:3000/api/orders', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(orderData),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to place the order');
+    }
+
+    const result = await response.json();
+    console.log('Order placed successfully:', result);
 
     // Clear the cart
     setCartItems([]);
     localStorage.removeItem('cart');
     window.dispatchEvent(new CustomEvent('cartUpdated'));
     alert('Order placed successfully!');
-  };
-
+  } catch (error) {
+    console.error('Error placing the order:', error);
+    alert('There was an error placing your order. Please try again.');
+  }
+};
   return (
     <div className="min-h-screen pt-16 bg-amber-50">
       <div className="container mx-auto px-4 py-12">
@@ -166,13 +191,9 @@ const Cart = () => {
                     <span className="text-gray-600">Subtotal</span>
                     <span className="font-medium">₹{total.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between mb-4">
-                    <span className="text-gray-600">Delivery</span>
-                    <span className="font-medium">₹50.00</span>
-                  </div>
                   <div className="flex justify-between mb-6">
                     <span className="font-medium text-lg">Total</span>
-                    <span className="font-bold text-lg">₹{(total + 50).toFixed(2)}</span>
+                    <span className="font-bold text-lg">₹{(total).toFixed(2)}</span>
                   </div>
                   <button
                     onClick={handleCheckout}

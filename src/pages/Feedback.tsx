@@ -19,10 +19,33 @@ const Feedback = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('Feedback submitted:', { ...formData, rating });
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  const feedbackData = {
+    ...formData,
+    recommendation: formData.recommendation === 'yes', // Convert to boolean
+    rating,
+  };
+
+  try {
+    const response = await fetch('http://localhost:3000/api/feedback', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(feedbackData),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to submit feedback');
+    }
+
+    const result = await response.json();
+    console.log('Feedback submitted successfully:', result);
+
     alert('Thank you for your valuable feedback!');
+    
     // Reset form
     setFormData({
       name: '',
@@ -30,10 +53,14 @@ const Feedback = () => {
       feedback: '',
       experience: '',
       recommendation: '',
-      improvements: ''
+      improvements: '',
     });
     setRating(0);
-  };
+  } catch (error) {
+    console.error('Error submitting feedback:', error);
+    alert('There was an error submitting your feedback. Please try again.');
+  }
+};
 
   return (
     <div className="min-h-screen pt-16 bg-amber-50">

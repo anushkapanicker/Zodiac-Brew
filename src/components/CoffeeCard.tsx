@@ -7,7 +7,7 @@ interface CoffeeCardProps {
   description: string;
   image: string;
   zodiacSign?: string;
-  price: string;
+  price: number;
   isFavorite?: boolean;
   onToggleFavorite?: (id: number) => void;
 }
@@ -51,9 +51,7 @@ const CoffeeCard: React.FC<CoffeeCardProps> = ({
       
       // Dispatch custom event for cart update
       window.dispatchEvent(new CustomEvent('cartUpdated'));
-      
-      // Show success message
-      alert('Added to cart successfully!');
+
     } catch (error) {
       console.error('Error adding to cart:', error);
       alert('Failed to add item to cart. Please try again.');
@@ -73,7 +71,7 @@ const CoffeeCard: React.FC<CoffeeCardProps> = ({
             {zodiacSign}
           </div>
         )}
-        {onToggleFavorite && (
+        {/* {onToggleFavorite && (
           <button 
             onClick={() => onToggleFavorite(id)}
             className="absolute top-4 right-4 bg-white p-2 rounded-full shadow-md transition-colors hover:bg-amber-50"
@@ -83,7 +81,7 @@ const CoffeeCard: React.FC<CoffeeCardProps> = ({
               className={isFavorite ? "fill-red-500 text-red-500" : "text-gray-400"} 
             />
           </button>
-        )}
+        )} */}
       </div>
       <div className="p-6">
         <h3 className="text-xl font-bold text-amber-900 mb-2">{name}</h3>

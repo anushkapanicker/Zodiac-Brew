@@ -1,17 +1,44 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import ZodiacSelector from '../components/ZodiacSelector';
-import FacialRecognition from '../components/FacialRecognition';
 import CoffeeCard from '../components/CoffeeCard';
-import coffeeData, { Coffee } from '../data/coffeeData';
+
+interface Coffee {
+  _id: number;
+  name: string;
+  description: string;
+  image: string;
+  price: number;
+  zodiacSigns: string[];
+}
 
 const Services = () => {
   const [selectedZodiacSign, setSelectedZodiacSign] = useState<string | null>(null);
-  const [detectedMood, setDetectedMood] = useState<string | null>(null);
   const [recommendations, setRecommendations] = useState<Coffee[]>([]);
   const [favorites, setFavorites] = useState<number[]>([]);
+  const [coffeeData, setCoffeeData] = useState<Coffee[]>([]);
 
   useEffect(() => {
+    // Fetch coffee data from the API
+    const fetchCoffeeData = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/api/coffees');
+        if (!response.ok) {
+          throw new Error('Failed to fetch coffee data');
+        }
+        const res = await response.json();
+        const { data } = res;
+        // Ensure the response is an array
+        setCoffeeData(Array.isArray(data) ? data : []);
+        
+      } catch (error) {
+        console.error('Error fetching coffee data:', error);
+        setCoffeeData([]); // Fallback to an empty array on error
+      }
+    };
+
+    fetchCoffeeData();
+
     // Load favorites from localStorage
     const savedFavorites = localStorage.getItem('favorites');
     if (savedFavorites) {
@@ -20,45 +47,27 @@ const Services = () => {
   }, []);
 
   useEffect(() => {
-    if (selectedZodiacSign || detectedMood) {
-      let filtered = [...coffeeData];
-      
-      if (selectedZodiacSign) {
-        filtered = filtered.filter(coffee => 
-          coffee.zodiacSigns.includes(selectedZodiacSign)
-        );
-      }
-      
-      if (detectedMood) {
-        filtered = filtered.filter(coffee => 
-          coffee.moods.includes(detectedMood.toLowerCase())
-        );
-      }
-      
+    if (selectedZodiacSign) {
+      const filtered = coffeeData.filter(coffee =>
+        coffee.zodiacSigns.includes(selectedZodiacSign)
+      );
+
       // If no matches found, provide some default recommendations
-      if (filtered.length === 0) {
-        filtered = coffeeData.slice(0, 3);
-      }
-      
-      setRecommendations(filtered);
+      setRecommendations(filtered.length > 0 ? filtered : coffeeData.slice(0, 3));
     } else {
       setRecommendations([]);
     }
-  }, [selectedZodiacSign, detectedMood]);
+  }, [selectedZodiacSign, coffeeData]);
 
   const handleSelectZodiacSign = (sign: string) => {
     setSelectedZodiacSign(sign);
-  };
-
-  const handleMoodDetected = (mood: string) => {
-    setDetectedMood(mood);
   };
 
   const toggleFavorite = (id: number) => {
     const newFavorites = favorites.includes(id)
       ? favorites.filter(favId => favId !== id)
       : [...favorites, id];
-    
+
     setFavorites(newFavorites);
     localStorage.setItem('favorites', JSON.stringify(newFavorites));
   };
@@ -69,11 +78,11 @@ const Services = () => {
         <div className="text-center mb-12">
           <h1 className="text-3xl md:text-4xl font-bold text-amber-900 mb-4">Coffee Recommendation Service</h1>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            Let us find your perfect coffee match based on your zodiac sign and current mood.
+            Let us find your perfect coffee match based on your zodiac sign.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+        <div className="gap-8 mb-12">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -83,14 +92,6 @@ const Services = () => {
               selectedSign={selectedZodiacSign} 
               onSelectSign={handleSelectZodiacSign} 
             />
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <FacialRecognition onMoodDetected={handleMoodDetected} />
           </motion.div>
         </div>
 
@@ -105,14 +106,14 @@ const Services = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {recommendations.map(coffee => (
                 <CoffeeCard
-                  key={coffee.id}
-                  id={coffee.id}
+                  key={coffee._id}
+                  id={coffee._id}
                   name={coffee.name}
                   description={coffee.description}
                   image={coffee.image}
                   price={coffee.price}
                   zodiacSign={coffee.zodiacSigns[0]}
-                  isFavorite={favorites.includes(coffee.id)}
+                  isFavorite={favorites.includes(coffee._id)}
                   onToggleFavorite={toggleFavorite}
                 />
               ))}
@@ -120,18 +121,10 @@ const Services = () => {
           </motion.div>
         )}
 
-        {selectedZodiacSign && detectedMood && recommendations.length === 0 && (
+        {!selectedZodiacSign && (
           <div className="text-center p-8 bg-white rounded-lg shadow-md">
             <p className="text-gray-600">
-              We're brewing up some recommendations based on your selections. Please wait a moment...
-            </p>
-          </div>
-        )}
-
-        {!selectedZodiacSign && !detectedMood && (
-          <div className="text-center p-8 bg-white rounded-lg shadow-md">
-            <p className="text-gray-600">
-              Please select your zodiac sign or use our mood detection feature to get personalized coffee recommendations.
+              Please select your zodiac sign to get personalized coffee recommendations.
             </p>
           </div>
         )}
