@@ -8,8 +8,6 @@ interface CoffeeCardProps {
   image: string;
   zodiacSign?: string;
   price: number;
-  isFavorite?: boolean;
-  onToggleFavorite?: (id: number) => void;
 }
 
 const CoffeeCard: React.FC<CoffeeCardProps> = ({
@@ -18,9 +16,7 @@ const CoffeeCard: React.FC<CoffeeCardProps> = ({
   description,
   image,
   zodiacSign,
-  price,
-  isFavorite = false,
-  onToggleFavorite
+  price
 }) => {
   const handleAddToCart = () => {
     try {
@@ -71,17 +67,6 @@ const CoffeeCard: React.FC<CoffeeCardProps> = ({
             {zodiacSign}
           </div>
         )}
-        {/* {onToggleFavorite && (
-          <button 
-            onClick={() => onToggleFavorite(id)}
-            className="absolute top-4 right-4 bg-white p-2 rounded-full shadow-md transition-colors hover:bg-amber-50"
-          >
-            <Heart 
-              size={20} 
-              className={isFavorite ? "fill-red-500 text-red-500" : "text-gray-400"} 
-            />
-          </button>
-        )} */}
       </div>
       <div className="p-6">
         <h3 className="text-xl font-bold text-amber-900 mb-2">{name}</h3>

@@ -4,7 +4,6 @@ import { Coffee, Star } from 'lucide-react';
 import CoffeeCard from '../components/CoffeeCard';
 
 const Home = () => {
-  const [favorites, setFavorites] = useState<number[]>([]);
   interface Coffee {
     _id: number;
     name: string;
@@ -110,8 +109,6 @@ useEffect(() => {
                   image={coffee.image}
                   price={coffee.price}
                   zodiacSign={coffee.zodiacSigns[0]}
-                  isFavorite={favorites.includes(coffee._id)}
-                  onToggleFavorite={toggleFavorite}
                 />
               </motion.div>
             ))}
